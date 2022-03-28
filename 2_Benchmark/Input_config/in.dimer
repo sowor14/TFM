@@ -1,7 +1,7 @@
 # Test input file for water interacting through CS potential
 
 units 		real
-atom_style	atomic
+atom_style	bond
 
 variable	dt	equal 1.0
 variable	Nrun	equal 100000
@@ -12,16 +12,18 @@ lattice		sc 1.0
 region		box block 0 50 0 50 0 50
 create_box	1 box
 
-create_atoms	1 random 84 1234 box
-
-mass		1 18.0
+molecule	dimer dimer.txt
+create_atoms	0 random 84 1234 box mol 4321
 
 pair_style	table linear 20000
-pair_coeff	1 1 table_CS_N20k_3.dat LL 6.0
+pair_coeff	1 1 table_LJ_N20k_11.dat LL 6.0
+pair_coeff	1 2 table_LJ_N20k_1j.dat LL 6.0
+pair_coeff	2 2 table_LJ_N20k_1j.dat LL 6.0
 
-group		wat type 1
+group		methyl type 1
+group		hydrox type 2
 
-fix		1 wat nvt temp 100 100 100
+fix		1 dimer nvt temp 100 100 100
 
 timestep	${dt}
 
