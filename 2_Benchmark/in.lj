@@ -1,0 +1,39 @@
+# LJ
+
+units		real
+atom_style	atomic
+
+variable	T	 equal 100.0
+variable	pext	 equal 1.0
+variable	dt     	 equal 1.0
+variable	Nrun     equal 10000
+variable	Nthermo  equal ${Nrun}/100
+variable	Ndump	 equal ${Nrun}/10
+
+read_data	input_Dist6_5.dat
+
+mass		1 1.0
+mass		2 1.0
+
+pair_style	lj/cut 10.0
+pair_coeff	1 1 0.2 3.16 10.0 # Ow-Ow (in kcal/mol and Angstrom)
+pair_coeff	1 2 0.1 3.26 10.0 # Ow-Cg (in kcal/mol and Angstrom)
+pair_coeff	2 2 1.0 1.0 10.0
+
+group		wat type 1
+group		graph type 2
+
+timestep	${dt}
+
+fix		1 wat nvt temp $T $T 100
+# fix		1 wat npt temp $T $T 100 iso ${pext} ${pext} 1000.0 dilate wat
+fix freeze graph setforce 0.0 0.0 0.0
+
+thermo          ${Nthermo}
+
+dump		1 all atom ${Ndump} pos.dat
+dump_modify 	1 scale no
+
+run		${Nrun}
+undump		1
+
