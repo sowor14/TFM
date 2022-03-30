@@ -2,6 +2,9 @@
 
 units 		real
 atom_style	bond
+#kspace_style	pppm 1.0e-4
+
+bond_style	harmonic
 
 variable	dt	equal 1.0
 variable	Nrun	equal 100000
@@ -10,15 +13,19 @@ variable	Ndump	equal ${Nrun}/100
 
 lattice		sc 1.0
 region		box block 0 50 0 50 0 50
-create_box	1 box
+create_box	2 box bond/types 1
+
+info		system
+
+bond_coeff	1 450 3.54
 
 molecule	dimer dimer.txt
-create_atoms	0 random 84 1234 box mol 4321
+create_atoms	0 random 10 1234 NULL mol dimer 4321
 
 pair_style	table linear 20000
 pair_coeff	1 1 table_LJ_N20k_11.dat LL 6.0
 pair_coeff	1 2 table_LJ_N20k_1j.dat LL 6.0
-pair_coeff	2 2 table_LJ_N20k_1j.dat LL 6.0
+pair_coeff	2 2 table_CS_N20k_3.dat LL 6.0
 
 group		methyl type 1
 group		hydrox type 2
