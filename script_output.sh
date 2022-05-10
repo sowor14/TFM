@@ -10,6 +10,6 @@
 # Example: ./script_output.sh log.lammps output.dat
 ##########################################################################
 
-filt1=$(grep -n "Step Temp" $1 | cut -d : -f 1)
+filt1=$(grep -n "Step Time" $1 | cut -d : -f 1)
 filt2=$(grep -n "Loop time" $1 | cut -d : -f 1)
 cat $1 | awk "NR>=$filt1 && NR<$filt2" >> $2

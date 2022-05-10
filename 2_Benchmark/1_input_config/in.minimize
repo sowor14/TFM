@@ -1,0 +1,63 @@
+#ç Test input file for water interacting through CS potential
+
+units 		real
+atom_style	bond
+
+bond_style	zero
+
+variable	Ntot	equal 1000
+variable	chi	equal 0.1
+variable	Nmet	equal ${chi}*${Ntot}
+variable	Nwat	equal ${Ntot}-${Nmet}
+variable	dim	equal 18
+variable	dim2	equal ${dim}-4
+variable	dt	equal 0.01
+variable	Nrun	equal 100000
+variable	Nthermo equal ${Nrun}/100
+variable	Ndump	equal ${Nrun}/100
+
+read_data	config.dat
+
+info		system
+
+bond_coeff	1 1.0
+
+mass		1 15.0
+mass		2 17.0
+mass		3 18.0
+
+pair_style	table linear 20000
+pair_coeff	1 1 table_LJ_N20k_11.dat LL 3.5
+pair_coeff	1 2 table_LJ_N20k_1j.dat LL 3.5
+pair_coeff	1 3 table_LJ_N20k_1j.dat LL 3.5
+pair_coeff	2 2 table_CS_N20k_3.dat LL 3.5
+pair_coeff	2 3 table_CS_N20k_3.dat LL 3.5
+pair_coeff	3 3 table_CS_N20k_3.dat LL 3.5
+
+group		methyl type 1
+group		hydrox type 2
+group		methanol type 1 2
+group		water type 3
+group		all type 1:3
+
+minimize	1.0e-4 1.0e-6 100 1000
+
+#fix		2 methyl nve
+#fix		3 hydrox nve
+#fix		4 all langevin 63.0 63.0 63.0 1234
+fix		1 methanol shake 0.0001 20 0 b 1
+fix		2 all nvt temp 63.0 63.0 1000.0
+#fix 		2 all npt temp 63.0 63.0 1000.0 iso 0.025 0.025 1000.0
+#fix		3 all press/berendsen iso 0.025 0.025 1000.0
+
+neigh_modify 	one 10000
+
+timestep	${dt}
+
+thermo_style	custom step temp pe ke etotal press density vol
+thermo		${Nthermo}
+
+dump		1 all atom ${Ndump} cs.lammpstrj
+
+run		${Nrun}
+undump		1
