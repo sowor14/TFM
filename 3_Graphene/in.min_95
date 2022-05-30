@@ -1,0 +1,130 @@
+# Input file for the confinement simulation of a water-methanol mixture
+# inside a graphene slit pore.
+# Slit width: 6.5 A
+
+units		real
+atom_style	bond
+#boundary	p p f
+
+bond_style	harmonic
+
+variable        dt      equal 1
+variable        Temp    equal 100.0
+variable	pres	equal 1.0
+variable	Ntot	equal 25000
+variable	chi	equal 0.1
+variable	Nmet	equal ${chi}*${Ntot}
+variable	Nwat	equal ${Ntot}-${Nmet}
+variable	slit	equal 9.5
+variable        Nrun    equal 1.0e3
+variable        Nthermo equal ${Nrun}/1000
+variable        Ndump   equal ${Nrun}/100
+#variable	Nthermo	equal 1
+#variable	Ndump	equal 1
+
+variable	sq32	equal sqrt(3)/2
+variable	acc	equal 1.42
+variable	dist	equal sqrt(3)*${acc}
+variable	ax	equal ${dist}*${sq32}
+variable	ay	equal ${dist}*0.5
+variable	tr	equal 1/3
+
+# Region limited to the graphene slit-pore extend. Changes later.
+region		box block -24.5 24.5 -25.5 25.5 -5.0 +5.0
+create_box	4 box bond/types 1 extra/bond/per/atom 1
+lattice		custom 1.0 &
+		a1 	${ax} 	${ay} 	0.0 	&
+		a2 	${ax}  -${ay} 	0.0 	&
+		a3 	 0.0 	 0.0    1.633 	&
+		basis	 0.0     0.0    0.0     &
+		basis   ${tr} 	${tr} 	0.0 
+
+region		plane1 block -24.5 24.5 -25.5 25.5 -4.75 -3.0
+region		plane2 block -24.5 24.5 -25.5 25.5  3.0 4.75
+
+create_atoms	1 region plane1
+create_atoms	1 region plane2
+
+lattice		sc 1.0
+
+change_box      all x final -42.0 42.0 &
+                    y final -42.0 42.0 &
+                    z final -51.0 51.0
+
+region          in1 block -41.0 41.0 -41.0 41.0 -49.0 -7.0
+region          in2 block -41.0 41.0 -41.0 41.0  7.0 49.0
+region          in3 block -41.0 41.0 -41.0 41.0 -3.5 2.0
+region          in_1 union 3 in1 in2 in3
+
+region          in4 block -40.0 40.0 -40.0 40.0 -46.0 -7.0
+region          in5 block -40.0 40.0 -40.0 40.0 7.0 46.0
+region          in6 block -40.0 40.0 -40.0 40.0 0.0 0.0
+region          in_2 union 3 in4 in5 in6
+
+lattice         custom 1.0 &
+                a1      ${ax}   ${ay}   0.0     &
+                a2      ${ax}  -${ay}   0.0     &
+                a3       0.0     0.0    6.0     &
+                basis    0.0     0.0    0.0     &
+                basis   ${tr}   ${tr}   0.0
+
+create_atoms	4 region in_1 subset ${Nwat} 1234
+
+lattice		sc 6.0 origin 0.5 0.5 0.5
+
+molecule	dimer dimer.txt
+create_atoms	1 region in_2 mol dimer 4321 subset ${Nmet} 1221
+
+bond_coeff	1 0.0 1.0
+
+lattice		sc 1.0
+
+change_box      all x final -42.0 42.0 &
+                    y final -42.0 42.0 &
+                    z final -51.0 51.0
+
+mass		1 12.0
+mass		2 15.0
+mass		3 17.0
+mass		4 18.0
+
+pair_style	table linear 20000
+pair_coeff	2 * table_LJ_N20k_2j.dat LL 10.0
+pair_coeff	2 2 table_LJ_N20k_22.dat LL 6.0
+pair_coeff	1 * table_LJ_N20k_1j.dat LS 10.0
+pair_coeff	1 1 table_LJ_N20k_11.dat SS 5.0
+pair_coeff	3 3 table_CS_N20k_34.dat LL 6.0
+pair_coeff	3 4 table_CS_N20k_34.dat LL 6.0
+pair_coeff	4 4 table_CS_N20k_34.dat LL 6.0
+
+group		graphene type 1
+group           methyl type 2
+group           hydrox type 3
+group           methanol type 2 3
+group           water type 4
+group           all type 1:4
+
+fix		freeze graphene setforce 0.0 0.0 0.0
+
+#minimize 	1.0e-4 1.0e-6 100 1000
+
+fix             1 methanol shake 0.0001 20 0 b 1 mol dimer
+fix		2 all nvt temp ${Temp} ${Temp} $(100*dt)  
+
+#run		100
+
+#neigh_modify	one 10000
+
+fix		2 all nvt temp ${Temp} ${Temp} $(100*dt)
+
+timestep	${dt}
+
+thermo_style	custom step temp pe ke etotal density press
+thermo          ${Nthermo}
+
+dump            1 all atom ${Ndump} cs.lammpstrj
+
+write_data      conf_100.dat nocoeff
+
+run             ${Nrun}
+undump          1

@@ -11,23 +11,33 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
-folder="/home/usuario/Documentos/Master/2_TFM/2_Benchmark/input_config/"
+folder="/home/usuario/Documentos/Master/2_TFM/2_Benchmark/1_input_config/"
 
-df1=pd.read_csv(folder+'data_261_3429.dat',sep='\s+',decimal='.')
-df2=pd.read_csv(folder+'data_261_6859.dat',sep='\s+',decimal='.')
-df3=pd.read_csv(folder+'data_261_8573.dat',sep='\s+',decimal='.')
-df4=pd.read_csv(folder+'data_261_12346.dat',sep='\s+',decimal='.')
-df5=pd.read_csv(folder+'data_261_14747.dat',sep='\s+',decimal='.')
-df1['Step']=df1['Step']*0.01
-df2['Step']=df2['Step']*0.01
-df3['Step']=df3['Step']*0.01
-df4['Step']=df4['Step']*0.01
-df5['Step']=df5['Step']*0.01
+df1=pd.read_csv(folder+'data_261_3429_a.dat',sep='\s+',decimal='.')
+df2=pd.read_csv(folder+'data_261_6859_a.dat',sep='\s+',decimal='.')
+df3=pd.read_csv(folder+'data_261_8573_a.dat',sep='\s+',decimal='.')
+df4=pd.read_csv(folder+'data_261_12346_a.dat',sep='\s+',decimal='.')
+df5=pd.read_csv(folder+'data_261_14747_a.dat',sep='\s+',decimal='.')
+
+factor=2.5*10**2
+
+df1['c_1[4]']=df1['c_1[4]']*factor
+df1['c_2[4]']=df1['c_2[4]']*factor
+df2['c_1[4]']=df2['c_1[4]']*factor
+df2['c_2[4]']=df2['c_2[4]']*factor
+df3['c_1[4]']=df3['c_1[4]']*factor
+df3['c_2[4]']=df3['c_2[4]']*factor
+df4['c_1[4]']=df4['c_1[4]']*factor
+df4['c_2[4]']=df4['c_2[4]']*factor
+df5['c_1[4]']=df5['c_1[4]']*factor
+df5['c_2[4]']=df5['c_2[4]']*factor
+
+
 
 def func(x, a, b):
     return a*x+b
 
-min=800
+min=5
 max=1000
 
 x1=df1['Step'][min:max]
@@ -65,19 +75,24 @@ popt42,pcov42=curve_fit(func,x4,y42)
 popt51,pcov51=curve_fit(func,x5,y51)
 popt52,pcov52=curve_fit(func,x5,y52)
 
-p=pd.DataFrame({'p':[3429,6859,8573,12346,14747],'D_m':[popt11[0],popt21[0],popt31[0],popt41[0],popt51[0]],'D_w':[popt12[0],popt22[0],popt32[0],popt42[0],popt52[0]]})
+p=pd.DataFrame({'p':[0.05,0.1,0.125,0.18,0.215],
+                'D_m':[popt11[0],popt21[0],popt31[0],popt41[0],popt51[0]],
+                'D_w':[popt12[0],popt22[0],popt32[0],popt42[0],popt52[0]]})
 
+p['D_m']=p['D_m']/6
+p['D_w']=p['D_w']/6
 
 f,ax=plt.subplots()
-# plt.title('Both cycles, force')
-plt.xlabel('P (atm)')
+plt.title(r'T$^{*}$=0.52, $\chi$=0.1')
+plt.xlabel('P$^{*}$')
 plt.ylabel('D')
 # plt.xscale('log')
-plt.xlim([3000,21000])
-plt.ylim([0.0001,0.002])
+plt.xlim([0.025,0.3])
+plt.ylim([0,0.06])
+# plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 plt.plot(p['p'],p['D_m'],'b.-',label='Methanol')
 plt.plot(p['p'],p['D_w'],'k.-',label='Water')
 plt.legend(loc='bottom left')
 
-plt.savefig(folder+'plot_D.png',dpi=199)
+# plt.savefig(folder+'plot_D.png',dpi=220)
 plt.show()

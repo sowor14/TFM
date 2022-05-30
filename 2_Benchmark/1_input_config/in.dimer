@@ -22,7 +22,7 @@ region		box1 block 0 ${dim} 0 ${dim} 0 ${dim}
 region		box2 block 0 ${dim2} 0 ${dim2} 0 ${dim2}
 create_box	3 box1 bond/types 1 extra/bond/per/atom 1
 
-info		system
+#info		system
 
 molecule	dimer dimer.txt
 create_atoms	0 region box2 mol dimer 4321 subset ${Nmet} 1221
@@ -33,6 +33,7 @@ lattice		sc 2 origin 0 0 0
 
 create_atoms	3 region box1 subset ${Nwat} 1234
 
+#possibilitat de masses=1??
 mass		1 15.0
 mass		2 17.0
 mass		3 18.0

@@ -1,0 +1,66 @@
+# Input file for the confinement simulation of a water-methanol mixture
+# inside a graphene slit pore.
+# Slit width: 6.5 A
+
+units		real
+atom_style	bond
+boundary	p p f
+
+bond_style	harmonic
+
+variable        dt      equal 1
+variable        Temp    equal 100.0
+variable        Nrun    equal 1.0e3
+variable        Nthermo equal ${Nrun}/1000
+variable        Ndump   equal ${Nrun}/100
+
+read_data	conf_100.dat
+
+bond_coeff	1 0.0 1.0
+
+mass		1 12.0
+mass		2 15.0
+mass		3 17.0
+mass		4 18.0
+
+pair_style	table linear 20000
+pair_coeff	2 * table_LJ_N20k_2j.dat LL 10.0
+pair_coeff	2 2 table_LJ_N20k_22.dat LL 6.0
+pair_coeff	1 * table_LJ_N20k_1j.dat LS 10.0
+pair_coeff	1 1 table_LJ_N20k_11.dat SS 5.0
+pair_coeff	3 3 table_CS_N20k_34.dat LL 6.0
+pair_coeff	3 4 table_CS_N20k_34.dat LL 6.0
+pair_coeff	4 4 table_CS_N20k_34.dat LL 6.0
+
+region		slit block -24.5 24.5 -25.5 25.5 -3.5 3.5
+
+group		graphene type 1
+group           methyl type 2
+group           hydrox type 3
+group           methanol type 2 3
+group           water type 4
+group           all type 1:4
+
+group		confined dynamic methanol region slit
+
+fix		freeze graphene setforce 0.0 0.0 0.0
+fix             1 methanol shake 0.0001 20 0 b 1
+fix		2 all nvt temp ${Temp} ${Temp} $(100*dt)  
+
+#neigh_modify	one 10000
+
+timestep	${dt}
+
+compute		1 confined chunk/atom type
+compute		2 methanol msd/chunk confined
+#compute		3 
+
+thermo_style	custom step temp etotal c_2[1] c_2[2] 
+thermo          ${Nthermo}
+
+#dump            1 all atom ${Ndump} cs.lammpstrj
+
+#write_data      conf_312.dat nocoeff
+
+run             ${Nrun}
+undump          1
