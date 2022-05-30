@@ -1,7 +1,7 @@
 0_DocsCluster
 1_Pre
 9_Bibliografia
-*.lammpstrj
+3_Graphene/*.lammpstrj
 job.sh
 LAMMPS
 token.dat
